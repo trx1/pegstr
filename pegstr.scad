@@ -98,7 +98,7 @@ holder_total_y = Holder_Count_Deep * (y_spacing);
 holder_roundness = min(Corner_Radius, holder_x_size / 2, holder_y_size / 2);
 bottom_holder_x_size = holder_x_size * taper_ratio;
 bottom_holder_y_size = holder_y_size * taper_ratio;
-
+moveY = holder_angle < 0 ? (holder_height + Wall_Thickness/2) * tan(holder_angle) : 0; //this isn't quite right but close enough
 pegboard_height =
   Full_Array_Of_Pins ? max(
       (strength_factor * .25 * holder_height) + holder_height,
@@ -526,9 +526,11 @@ module holders() {
       for (y = [0:Holder_Count_Deep - 1]) {
         // move holder to correct position
         //translateZ =  -(holder_height / 2) * sin(holder_angle) - ((holder_height/2) - hole_size)  ;
+
+        
         translateZ = -( (holder_height / 2) + (Offset_Amount > 0 && y > 0 ? y * Offset_Amount : 0));
-        translateX = -(y * (holder_y_size)) - holder_y_size / 2 - abs(sin(holder_angle)) - holder_offset - Wall_Thickness;
-        translateY = -holder_total_x / 2 + x_spacing / 2 + (x) * x_spacing + Wall_Thickness / 2;
+        translateX = -(y * (holder_y_size)) - holder_y_size / 2 - sin(holder_angle) - holder_offset - Wall_Thickness + moveY;
+        translateY = -holder_total_x / 2 + x_spacing / 2 + (x) * x_spacing + Wall_Thickness / 2 ;
         echo(
           "Translating Holder by:",
           translateX=translateX,
@@ -545,7 +547,7 @@ module holders() {
             translateZ,
           ]
         ) {
-
+          // 0 = false, 1 = true
           frontLeftCornerMask = x== 0 || Holder_Count_Deep > 1 && y + 1 < Holder_Count_Deep ? 0 : 1;
           frontRightCornerMask = x== Holder_Count_Wide - 1 || Holder_Count_Deep > 1 && y + 1 < Holder_Count_Deep ? 0 : 1;
           backLeftCornerMask = y == 0 || (Holder_Count_Deep > 1 && y > 0) ? 0 : 1;
@@ -553,9 +555,10 @@ module holders() {
 
           frontLeftTaperMask = x== 0 || Holder_Count_Deep > 1 && y + 1 < Holder_Count_Deep ? 0 : 1;
           frontRightTaperMask = x== Holder_Count_Wide - 1 || Holder_Count_Deep > 1 && y + 1 < Holder_Count_Deep ? 0 : 1;
-          backLeftTaperMask = y == 0 || (Holder_Count_Deep > 1 && y > 0) ? 0 : 1;
+          backLeftTaperMask =  y == 0 || (Holder_Count_Deep > 1 && y > 0) ? 0 : 1;
           backtRightTaperMask = y == 0 || (Holder_Count_Deep > 1 && y > 0) ? 0 : 1;
  
+          
           echo("Creating Holder ", x=x, y=y);
           echo(
             "round_rect_ex args:",
@@ -565,7 +568,7 @@ module holders() {
             r=holder_roundness,
             taper_angle=Taper_Angle,
             corner_mask=[frontLeftCornerMask, backLeftCornerMask, frontRightCornerMask, backtRightCornerMask],
-            taper_mask=[frontLeftTaperMask, frontRightTaperMask, backLeftTaperMask, backtRightTaperMask]
+            taper_mask=[frontLeftTaperMask, backLeftTaperMask, frontRightTaperMask, backtRightTaperMask]
           );
           round_rect_ex(
             holder_y_size,
@@ -574,7 +577,7 @@ module holders() {
             holder_roundness,
             Taper_Angle,
             corner_mask=[frontLeftCornerMask, backLeftCornerMask, frontRightCornerMask, backtRightCornerMask],
-            taper_mask=[frontLeftCornerMask, backLeftCornerMask, frontRightCornerMask, backtRightCornerMask]
+            taper_mask=[frontLeftTaperMask, backLeftTaperMask, frontRightTaperMask, backtRightTaperMask]
           );
         }
         // positioning
@@ -597,7 +600,7 @@ module holder_holes() {
 
     for (x = [1:Holder_Count_Wide]) {
       for (y = [0:Holder_Count_Deep - 1]) {
-        translateX = -(y * (holder_y_size)) - Holder_Width / 2 - Wall_Thickness - abs(sin(holder_angle)) - holder_offset - Wall_Thickness;
+        translateX = -(y * (holder_y_size)) - Holder_Width / 2 - Wall_Thickness - abs(sin(holder_angle)) - holder_offset - Wall_Thickness + moveY;
         translateY = -holder_total_x / 2 + holder_x_size / 2 + (x - 1) * x_spacing + Wall_Thickness / 2;
         translateZ = -pegboard_height / 2 - (Offset_Amount > 0 && y > 0 ? y * Offset_Amount : 0);
         // ---------------------------
@@ -706,7 +709,7 @@ module holder_front_cutout() {
 
     for (x = [1:Holder_Count_Wide]) {
       for (y = [0:Holder_Count_Deep - 1]) {
-        translateX = -(y * (holder_y_size)) - Holder_Width / 2 - Wall_Thickness - abs(sin(holder_angle)) - holder_offset - Wall_Thickness - cutoutDepth / 2;
+        translateX = -(y * (holder_y_size)) - Holder_Width / 2 - Wall_Thickness - abs(sin(holder_angle)) - holder_offset - Wall_Thickness - cutoutDepth / 2 + moveY;
 
         // translateX = -(y * y_spacing) + Wall_Thickness - Wall_Thickness * abs(sin(holder_angle)) - holder_offset - Pegboard_Thickness / 2;
         // translateX = 0; // -(y * y_spacing) + abs(sin(holder_angle)) - holder_offset - Pegboard_Thickness / 2;
@@ -794,32 +797,32 @@ module holder_front_cutout() {
 module finalHolder() {
 
   if (!Strict_Holder_Height) {
-    difference() {
-      hull() {
+    // difference() {
+      // hull() {
         pinboard();
         rotate([0, holder_angle, 0])
           holders();
-      }
+      // }
       rotate([0, holder_angle, 0]) {
         holder_holes();
         holder_front_cutout();
       }
-    }
+    // }
   } else {
 
     union() {
       pinboard();
-      difference() {
-        hull() {
+      // difference() {
+      //   hull() {
           holderboard();
           rotate([0, holder_angle, 0])
             holders();
-        }
+        // }
         rotate([0, holder_angle, 0]) {
         holder_holes();
         holder_front_cutout();
       }
-      }
+      // }
       
     }
   }
