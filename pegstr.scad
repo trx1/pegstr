@@ -769,7 +769,7 @@ module holder_front_cutout() {
     H1 = height + .002;
     H2 = max(holder_height, pegboard_height) - height;
 
-    cutoutDepth = Holder_Depth / 2 + holder_spacing_y; // - Wall_Thickness + .1;
+    cutoutDepth = Holder_Depth + holder_spacing_y; // - Wall_Thickness + .1;
 
     for (x = [1:Holder_Count_Wide]) {
       for (y = [0:Holder_Count_Deep - 1]) {
@@ -862,8 +862,6 @@ module finalHolder() {
 
     union() {
       pinboard();
-      // difference() {
-      //   hull() {
       holderboard();
       rotate([0, holder_angle, 0])
       difference() {
@@ -871,12 +869,7 @@ module finalHolder() {
          holder_holes();
         holder_front_cutout();
       }
-      // }
-      // rotate([0, holder_angle, 0]) {
-      //   holder_holes();
-      //   holder_front_cutout();
-      // }
-      // }
+   
     }
   }
 }
