@@ -1,4 +1,4 @@
-// PEGSTER 2.0 - Advanced Pegboard Wizard
+// PegSmith - Advanced Pegboard Wizard
 // Written By Chad Urvig, January 2026
 // Original Design by Marius Gheorghescu, November 2014 (PEGSTR)
 
