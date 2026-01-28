@@ -159,6 +159,25 @@ echo(str("holder_cutout_width: ", Holder_Width * holder_cutout_side));
 echo(str("hole_spacing: ", hole_spacing));
 //echo("moveY", moveY);
 
+//preview color
+module pColor(color) {
+  if ($preview){
+    color(color) children();
+  }
+  else
+    children();
+}
+
+//final color
+module fColor(color) {
+  if (!$preview){
+    color(color) children();
+  }
+  else
+    children();
+}
+
+
 module round_rect_ex(x, y, z, radius, taper_angle, corner_mask = [1, 1, 1, 1], taper_mask = [1, 1, 1, 1]) {
 
   $fn = holder_sides;
@@ -301,19 +320,16 @@ module round_rect_ex2(topX, topY, z, bottomX, bottomY, radius, radiusBottom, cor
   }
 }
 
+function clamp(x, lo, hi) = x < lo ? lo : x > hi ? hi : x;
+
+
 module pin(clip) {
 
   h = Pegboard_Thickness;
-  r_bend = 5.2; // bend radius
+  r_bend = clamp( 5.2 / (5.8 / Peg_Size), 3, 8 ); // bend radius
+  echo("r_bend: ", r_bend);
   r_tube = Peg_Size / 2; // tube radius
   angle = -85; // bend angle (degrees)
-  r_bend2 = r_bend + 2 * r_tube; // centerline radius of second arc
-
-  overlap = 1; // mm of overlap
-  r_bend3 = r_bend + 2 * r_tube - overlap;
-
-  // echo(str("hole_size: ", Peg_Size));
-  // echo(str("pin length (h): ", h));
 
   if (clip) {
     difference() {
@@ -413,7 +429,7 @@ module pinboard(isStepped = false) {
     //thickness = .1;
     rotate([0, 90, 0])
       translate([0, 0, -Wall_Thickness]) {
-        color(rands(0, 1, 3))
+        pColor(rands(0, 1, 3));
           hull() {
             translate(
               [
@@ -677,7 +693,7 @@ module holder_holes() {
           ]
         ) {
 
-          color("yellow") {
+          pColor("yellow")
 
             round_rect_ex2(
               Holder_Depth,
@@ -689,7 +705,7 @@ module holder_holes() {
               min(holder_roundness, bottom_holder_x_size / 2, bottom_holder_y_size / 2)
             );
 
-          }
+          
         }
 
         // ---------------------------
@@ -711,7 +727,7 @@ module holder_holes() {
             ]
           ) {
 
-            color("green")
+            pColor("green")
               round_rect_ex2(
                 topX=Lower_Holder_Hole_Diameter > 0 ? Lower_Holder_Hole_Diameter : bottom_holder_y_size,
                 topY=Lower_Holder_Hole_Diameter > 0 ? Lower_Holder_Hole_Diameter : bottom_holder_x_size,
@@ -772,7 +788,7 @@ module holder_front_cutout() {
             ]
           ) {
 
-            color("red")
+            pColor("red")
               round_rect_ex2(
                 topX=cutoutDepth,
                 topY=Holder_Width * holder_cutout_side,
@@ -799,7 +815,7 @@ module holder_front_cutout() {
               ]
             ) {
 
-              color("green")
+              pColor("green")
                 round_rect_ex2(
                   topX=cutoutDepth,
                   topY=Holder_Width * holder_cutout_side,
@@ -852,8 +868,8 @@ module finalHolder() {
   }
 }
 
-module pegstr() {
-  color("#4D64CF");
+module pegSmith() {
+  fColor("#4D64CF")
   rotate([0, 0, 90]) {
     finalHolder();
     //color("Blue")
@@ -863,4 +879,4 @@ module pegstr() {
   echo("Written By Chad Urvig, January 2026");
 }
 
-pegstr();
+pegSmith();
